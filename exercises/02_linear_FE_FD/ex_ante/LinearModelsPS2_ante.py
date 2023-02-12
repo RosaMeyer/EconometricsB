@@ -25,21 +25,21 @@ def estimate(
         dict: A dictionary with the results from the ols-estimation.
     """
     
-    b_hat = None # Fill in
-    resid = None # Fill in
-    SSR = None # Fill in
-    SST = None # Fill in
-    R2 = None # Fill in
+    b_hat = est_ols(x,y)                # Fill in
+    resid = y - x@b_hat                 # Fill in    y - y^
+    SSR = sum((x@b_hat - y.mean())**2)  # Fill in    Sum(i=1..n) (y_i^ - y_bar)^2   –– sresid.T @ resid
+    SST = sum((y - y.mean())**2)        # Fill in    Sum(i=1..n) (y_i - y_bar)^2    –– (y-y.mean().T) @ (y-y.mean())
+    R2 = 1 - SSR/SST                        # Fill in
 
     sigma, cov, se = variance(transform, SSR, x, N, T)
-    t_values =  None # Fill in
+    t_values = b_hat/se                 # Fill in
     
     names = ['b_hat', 'se', 'sigma', 't_values', 'R2', 'cov']
     results = [b_hat, se, sigma, t_values, R2, cov]
     return dict(zip(names, results))
 
-    
-def est_ols( y: np.ndarray, x: np.ndarray) -> np.ndarray:
+
+def est_ols(y: np.ndarray, x: np.ndarray) -> np.ndarray:
     """Estimates OLS using input arguments.
 
     Args:
@@ -49,7 +49,16 @@ def est_ols( y: np.ndarray, x: np.ndarray) -> np.ndarray:
     Returns:
         np.array: Estimated beta hats.
     """
-    return   # Fill in
+
+    # (X'X)^-1
+    part_1 = np.linalg.inv(np.matmul(x.transpose(), x))
+
+    # X' * y
+    part_2 = np.dot(x.transpose(), y)
+
+    beta_hat = np.matmul(part_1, part_2)
+
+    return beta_hat # Fill in
 
 def variance( 
         transform: str, 
