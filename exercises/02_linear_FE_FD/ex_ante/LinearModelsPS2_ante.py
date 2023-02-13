@@ -25,14 +25,14 @@ def estimate(
         dict: A dictionary with the results from the ols-estimation.
     """
     
-    b_hat = est_ols(x,y)                # Fill in
-    resid = y - x@b_hat                 # Fill in    y - y^
-    SSR = sum((x@b_hat - y.mean())**2)  # Fill in    Sum(i=1..n) (y_i^ - y_bar)^2   –– sresid.T @ resid
-    SST = sum((y - y.mean())**2)        # Fill in    Sum(i=1..n) (y_i - y_bar)^2    –– (y-y.mean().T) @ (y-y.mean())
-    R2 = 1 - SSR/SST                        # Fill in
+    b_hat = est_ols(y, x)                       # Fill in
+    resid = y - x@b_hat                         # Fill in    y - y^
+    SSR = resid.T@resid                         # Fill in    Sum(i=1..n) (y_i^ - y_bar)^2   –– resid.T @ resid
+    SST = (y - np.mean(y)).T@(y - np.mean(y))   # Fill in    Sum(i=1..n) (y_i - y_bar)^2    –– (y-y.mean().T) @ (y-y.mean())
+    R2 = 1 - SSR/SST                            # Fill in
 
     sigma, cov, se = variance(transform, SSR, x, N, T)
-    t_values = b_hat/se                 # Fill in
+    t_values = b_hat/se # Fill in
     
     names = ['b_hat', 'se', 'sigma', 't_values', 'R2', 'cov']
     results = [b_hat, se, sigma, t_values, R2, cov]
@@ -50,16 +50,14 @@ def est_ols(y: np.ndarray, x: np.ndarray) -> np.ndarray:
         np.array: Estimated beta hats.
     """
 
-    # (X'X)^-1
-    part_1 = np.linalg.inv(np.matmul(x.transpose(), x))
+    ## (X'X)^-1
+    #part_1 = np.linalg.inv(np.matmul(x.transpose(), x))
+    ## X' * y
+    #part_2 = np.dot(x.transpose(), y)
+    #beta_hat = np.matmul(part_1, part_2)
 
-    # X' * y
-    part_2 = np.dot(x.transpose(), y)
-
-    beta_hat = np.matmul(part_1, part_2)
-
-    return beta_hat # Fill in
-
+    return la.inv(x.T@x)@(x.T@y) # Fill in
+ 
 def variance( 
         transform: str, 
         SSR: float, 
@@ -85,20 +83,21 @@ def variance(
         tuple: [description]
     """
 
-    K=x.shape[1]
-
+    K = x.shape[1]
+    if not N:
+        N = x.shape[0]
 
     if transform in ('', 're' 'fd'):
-          sigma = None # Fill in
+          sigma = SSR / (N - K) # Fill in
     elif transform.lower() == 'fe':
-          sigma = None # Fill in
+          sigma = SSR / (N * (T - 1) - K) # Fill in
     elif transform.lower() in ('be'): 
-          sigma = None # Fill in
+          sigma = SSR / (T * (N - K)) # Fill in
     else:
         raise Exception('Invalid transform provided.')
     
-    cov =  None # Fill in
-    se =  None # Fill in
+    cov =  sigma * la.inv(x.T@x) # Fill in
+    se =  np.sqrt(cov.diagonal()).reshape(-1, 1) # Fill in
     return sigma, cov, se
 
 
