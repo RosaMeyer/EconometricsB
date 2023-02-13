@@ -88,11 +88,11 @@ def variance(
         N = x.shape[0]
 
     if transform in ('', 're' 'fd'):
-          sigma = SSR / (N - K) # Fill in
-    elif transform.lower() == 'fe':
-          sigma = SSR / (N * (T - 1) - K) # Fill in
+          sigma = SSR / (N*T - K) # Fill in
+    elif transform.lower() == ('fe'):
+          sigma = SSR / (N*T - N - K) # Fill in
     elif transform.lower() in ('be'): 
-          sigma = SSR / (T * (N - K)) # Fill in
+          sigma = SSR / (N - K) # Fill in
     else:
         raise Exception('Invalid transform provided.')
     
