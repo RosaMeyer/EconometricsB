@@ -144,7 +144,7 @@ def variance(
     return sigma2, cov, se
 
 
-def robust( x: np.array, residual: np.array, t:int) -> tuple:
+def robust(x: np.array, residual: np.array, t:int) -> tuple:
     '''Calculates the robust variance estimator 
 
     ARGS: 
@@ -159,17 +159,17 @@ def robust( x: np.array, residual: np.array, t:int) -> tuple:
     
     # Else we loop over each individual.
     else:
-        NT,K = None 
-        N = None 
+        NT, K = x.shape
+        N = NT // t # floor divivsion - makes the resulting number an int. or use int(NT/t)
         B = np.zeros((K, K)) # initialize 
 
         for i in range(N):
-            idx_i = None # index values for individual i. Hint: Use python's slice function
-            Omega = None # (T,T) matrix of outer product of i's residuals 
-            B += None # (K,K) contribution 
+            idx_i = slice(i*t, (i+1)*t) # index values for individual i. Hint: Use python's slice function
+            Omega = residual[idx_i] @ residual[idx_i].T # (T,T) matrix of outer product of i's residuals 
+            B += x[idx_i].T @ Omega @ x[idx_i] # (K,K) contribution 
 
-        Ainv = None
-        cov = None
+        Ainv = la.inv(x.T@x)
+        cov = Ainv @ B @ Ainv
     
     se = np.sqrt(np.diag(cov)).reshape(-1, 1)
     return cov, se
