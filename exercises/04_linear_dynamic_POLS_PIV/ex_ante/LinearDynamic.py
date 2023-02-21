@@ -36,10 +36,15 @@ def estimate(
     assert y.shape[1] == 1, 'y must be a column vector'
     assert y.shape[0] == x.shape[0], 'y and x must have same first dimension'
     
-    if z is None: 
-        b_hat = est_ols(y, x)
-    else: 
+    if z is None:
+        DOIV = False
+    else:
+        DOIV = True
+
+    if DOIV: 
         b_hat = est_piv(y, x, z)
+    else: 
+        b_hat = est_ols(y, x)
     
     residual = y - x@b_hat
     SSR = np.sum(residual ** 2)
@@ -47,11 +52,18 @@ def estimate(
     R2 = 1.0 - SSR/SST
 
     # If estimating piv, transform x before we calculating variance:
-    if z is not None:
-        x_ = z @ la.solve(z.T@z, z.T@x)
+    if DOIV:
+        gamma_hat = la.solve(z.T@z, z.T@x)
+        x_ = z @ gamma_hat
         R2 = np.array(np.nan)
-    else: 
+    else:
         x_ = x
+
+    # if z is not None:
+    #     x_ = z @ la.solve(z.T@z, z.T@x)
+    #     R2 = np.array(np.nan)
+    # else: 
+    #     x_ = x
 
     sigma2, cov, se = variance(transform, SSR, x_, t)
     if robust_se:
@@ -91,11 +103,13 @@ def est_piv( y: np.array, x: np.array, z: np.array) -> np.array:
     # FILL IN: Estimate betahat and return it (Page 362 in Wooldrigde )
         
     # 1st stage 
+    gamma = la.inv(z.T@z) @ z.T@x
+    xh = z@gamma
 
     # 2nd stage
+    betahat = la.inv(xh.T@xh) @ xh.T@ y # <-- replace with PIV estimate 
     
-    betahat = np.array([0., 0.]) # <-- replace with PIV estimate 
-    return betahat 
+    return betahat
 
 def variance( 
         transform: str, 
