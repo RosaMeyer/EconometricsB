@@ -1,8 +1,12 @@
 import numpy as np 
 from scipy.stats import norm
 
+from numpy import random
+
+
 name = 'Tobit'
 
+# criterion function
 def q(theta, y, x): 
     return None # Fill in 
 
@@ -22,10 +26,16 @@ def starting_values(y,x):
     Returns
         theta: K+1 array, where theta[:K] are betas, and theta[-1] is sigma (not squared)
     '''
-    b_ols = None # OLS estimates as starting values 
-    sigmahat = None # OLS estimate of sigma = sqrt(sigma^2) as starting value 
-    theta0 = np.append(b_ols, sigmahat)
-    return theta0 
+    N, K = x.shape
+
+    b_ols = np.linalg.solve(x.T@x, x.T@y) # OLS estimates as starting values
+    
+    residuals = y - x@b_ols 
+    sigma2_hat = 1/(N-K) * np.dot(residuals, residuals)
+    sigma_hat = np.sqrt(sigma2_hat) # OLS estimate of sigma = sqrt(sigma^2) as starting value 
+    theta_0 = np.append(b_ols, sigma_hat)
+
+    return theta_0 
 
 def predict(theta, x): 
     '''predict(): the expected value of y given x 
@@ -34,16 +44,31 @@ def predict(theta, x):
         E_pos: E(y|x, y>0) 
     '''
     # Fill in 
-    E = None
-    Epos = None
+    b = theta[:-1]
+    sig = theta[-1]
+
+    # Input to mills_ratio:
+    z = x@b / sig
+    mills_ratio = norm.pdf(z) / norm.cdf(z)
+
+    E = x@b * norm.cdf(x@b/sig) + sig * norm.pdf(x@b/sig)
+    Epos = x@b + sig * mills_ratio
     return E, Epos
 
 def sim_data(theta, N:int): 
     b = theta[:-1]
     sig = theta[-1]
+    K = b.size
 
     # FILL IN 
-    x = None 
-    y = None 
+    # x = random.normal(size=(N, b.shape[0])) 
+    # x[:,0]=np.ones((N))
+    xx = np.random.normal(size=(N,K-1))
+    oo = np.ones((N,1))
+    x  = np.hstack([oo,xx])
 
-    return y,x
+    u = np.random.normal(loc=0, scale=sig, size=(N,)) 
+    ys = x @ b + u 
+    y = np.maximum(ys, 0.0)
+
+    return y, x
